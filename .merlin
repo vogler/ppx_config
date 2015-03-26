@@ -1,0 +1,3 @@
+PKG batteries ppx_deriving ppx_deriving.std ppx_deriving_yojson
+S .
+B _build
