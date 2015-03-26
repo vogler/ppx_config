@@ -15,3 +15,7 @@
         let r = create ()
         (* let r = { r with outfile = Some "bar" } *)
         let _ = print_endline @@ Yojson.Safe.to_string @@ to_yojson @@ r
+
+- Updating fields is ugly, but that shouldn't be a problem, since we only read them or use the generated parsers.
+
+        let r = { r with global = { r.global with std = { init.global.std with justcil = true } } }

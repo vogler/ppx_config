@@ -1,9 +1,4 @@
 open BatteriesExceptionless
-open Ana2 (* if the module is not used here, we need to open it, otherwise Analyses.ana won't be extended and parsing the constructor will fail *)
-
-(* docs:
-extensible variant types: http://caml.inria.fr/pub/docs/manual-ocaml/extn.html#sec246
-*)
 
 (* TODO all categories global? Std, Analyses, Experimental, Debugging *)
 type std = {
@@ -30,21 +25,24 @@ type phase = {
   activated : Analyses.ana list [@default [Ana1.default]];
   global : global [@default create_global ()];
 } [@@deriving yojson, create]
-type t = { phases : phase list [@default [create_phase ()]]; global : global [@default create_global ()] } [@@deriving yojson {strict = false}, create]
+type t = {
+  phases : phase list [@default [create_phase ()]];
+  global : global [@default create_global ()]
+} [@@deriving yojson {strict = true}, create]
 
-let print x = print_endline @@ Yojson.Safe.to_string @@ to_yojson x
+let default = create ()
+(* print only values different from default *)
+let print_diff = print_endline % Yojson.Safe.to_string % to_yojson
+(* print all values *)
+let print_all _ = failwith "TODO"
+let print = print_diff
+let parse_res = of_yojson % Yojson.Safe.from_string
+let parse s = match parse_res s with
+  | `Ok x -> x
+  | `Error x -> failwith @@ "Config parsing error: " ^ x
 
-(* create with defaults and print *)
-let r = create ()
-(* modify and print (only values different from defaults). NB: includes vs. kernel_includes: empty lists get output if default is not explicitly set to []. *)
-(* let r = { r with global = { r.global with std = { init.global.std with justcil = true } } } *)
-let _ = print r
-
-(* parse from string and print again *)
-let s = "{\"global\":{\"std\":{\"kernel_includes\":[],\"custom_includes\":[],\"justcil\":true}}, \"phases\": [{\"activated\": [[\"Ana2\"]]}]}"
-(* let s = "{foo: null}" *)
-let j = Yojson.Safe.from_string s
-let r = match of_yojson j with `Ok x -> x | `Error x -> failwith x
-(* let r = { r with global = { r.global with std = { r.global.std with justcil = true } } } *)
-let _ = print @@ r
-(* print all values (even if equal to default) *)
+(* tests: parse from string and print again *)
+let t1 = "{\"global\":{\"std\":{\"kernel_includes\":[],\"custom_includes\":[],\"justcil\":true}}, \"phases\": [{\"activated\": [[\"Ana2\"]]}]}"
+let t2 = "{foo: null}" (* if strict then fail else ignore *)
+(* let _ = parse t1 |> print *)
+(* let _ = parse t2 |> print *)
