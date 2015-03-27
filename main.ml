@@ -5,4 +5,6 @@ open Ana1
 open Ana2
 
 let _ =
-  Config.(print default)
+  print_string "default config: ";
+  Config.(print default);
+  print_endline @@ "phase.global.std.outfile = " ^ Config.((get_phase ()).global.std.outfile)
